@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">SSQ Lab Logo</title>
+  <desc id="desc">Red and blue lottery balls over a ticket-shaped mark.</desc>
+  <defs>
+    <linearGradient id="ticket" x1="18" y1="18" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef4ff"/>
+    </linearGradient>
+    <linearGradient id="redBall" x1="34" y1="28" x2="84" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff5d66"/>
+      <stop offset="1" stop-color="#c7192d"/>
+    </linearGradient>
+    <linearGradient id="blueBall" x1="64" y1="48" x2="104" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4d8cff"/>
+      <stop offset="1" stop-color="#1358db"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#233047" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <path d="M24 22h80a10 10 0 0 1 10 10v15a10 10 0 0 0 0 20v29a10 10 0 0 1-10 10H24a10 10 0 0 1-10-10V67a10 10 0 0 0 0-20V32a10 10 0 0 1 10-10Z" fill="url(#ticket)" filter="url(#shadow)"/>
+  <path d="M33 40h27M33 88h62M33 75h22M76 40h19" stroke="#a9b6ca" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="56" cy="61" r="29" fill="url(#redBall)"/>
+  <circle cx="82" cy="72" r="24" fill="url(#blueBall)"/>
+  <path d="M44 48c4-5 12-8 20-6" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity=".65"/>
+  <path d="M72 60c4-4 10-5 16-4" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+  <text x="56" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#fff">SS</text>
+  <text x="84" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="800" fill="#fff">Q</text>
+</svg>

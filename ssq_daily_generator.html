@@ -1,0 +1,1516 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>双色球每日娱乐选号</title>
+  <link rel="icon" href="/assets/ssq-logo.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f9;
+      --panel: #ffffff;
+      --ink: #1f2933;
+      --muted: #667085;
+      --line: #d8dee8;
+      --red: #d7353f;
+      --blue: #246bfe;
+      --blue-soft: #eaf1ff;
+      --red-soft: #fff0f2;
+      --green: #12805c;
+      --amber: #aa6a00;
+      --shadow: 0 12px 30px rgba(31, 41, 51, 0.08);
+      --shadow-soft: 0 5px 16px rgba(31, 41, 51, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+      background:
+        linear-gradient(180deg, #f9fbff 0, #f4f6f9 280px, #f4f6f9 100%);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      background:
+        linear-gradient(90deg, rgba(215, 53, 63, 0.08), rgba(36, 107, 254, 0.08)),
+        #ffffff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 18px 20px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+
+    .mark img {
+      width: 54px;
+      height: 54px;
+      display: block;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .brand-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-badge {
+      border-radius: 999px;
+      padding: 5px 8px;
+      color: #0f4fb8;
+      background: var(--blue-soft);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .date-pill {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #31435f;
+      background: rgba(255, 255, 255, 0.82);
+      white-space: nowrap;
+      font-size: 13px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    main {
+      max-width: 1240px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 22px 20px 38px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .toolbar,
+    .panel,
+    .ticket {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .toolbar {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+      box-shadow: var(--shadow);
+      border-top: 4px solid var(--red);
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: var(--ink);
+      background: #ffffff;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #7aa5ff;
+      box-shadow: 0 0 0 3px rgba(36, 107, 254, 0.12);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #ffffff;
+      background: linear-gradient(135deg, #e23b47, #bf1e2f);
+      box-shadow: 0 6px 14px rgba(215, 53, 63, 0.22);
+      transition: transform 120ms ease, filter 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .btn:hover {
+      filter: brightness(0.97);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn.secondary {
+      color: var(--ink);
+      background: #ffffff;
+      border-color: var(--line);
+      box-shadow: none;
+    }
+
+    .btn.blue {
+      background: linear-gradient(135deg, #3677ff, #1559df);
+      box-shadow: 0 6px 14px rgba(36, 107, 254, 0.22);
+    }
+
+    .btn svg,
+    .mini-btn svg {
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .ticket {
+      padding: 14px;
+      box-shadow: 0 4px 12px rgba(31, 41, 51, 0.04);
+      display: grid;
+      gap: 12px;
+      transition: border-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .ticket:hover {
+      border-color: #b9c7db;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .ticket-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ticket-index {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .mini-btn {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #ffffff;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .mini-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .balls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .ball {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      color: #ffffff;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.13);
+    }
+
+    .ball.red {
+      background: linear-gradient(145deg, #ef4b55, #c82032);
+    }
+
+    .ball.blue {
+      background: linear-gradient(145deg, #3f82ff, #1559df);
+      margin-left: 2px;
+    }
+
+    .meta,
+    .stat-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .tag {
+      border-radius: 7px;
+      padding: 5px 7px;
+      font-size: 12px;
+      line-height: 1;
+      color: #364152;
+      background: #eef2f7;
+    }
+
+    .tag.green {
+      color: var(--green);
+      background: #e9f7f1;
+    }
+
+    .tag.amber {
+      color: var(--amber);
+      background: #fff4dc;
+    }
+
+    aside {
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel {
+      padding: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-title {
+      margin: 0 0 10px;
+      font-size: 15px;
+      line-height: 1.4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--red), var(--blue));
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 236px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      outline: none;
+      color: var(--ink);
+      background: #fbfcfd;
+      line-height: 1.55;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .notice,
+    details,
+    .method {
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 13px;
+    }
+
+    .notice {
+      margin: 10px 0 0;
+    }
+
+    .method {
+      margin: 0;
+    }
+
+    summary {
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: min(360px, calc(100vw - 36px));
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #ffffff;
+      background: #1f2933;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      font-size: 13px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 960px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar,
+      .toolbar {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+      }
+
+      .date-pill {
+        width: fit-content;
+      }
+
+      .settings,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .btn {
+        flex: 1 1 170px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="topbar">
+        <div class="brand">
+          <div class="mark"><img src="/assets/ssq-logo.svg" alt="双色球选号助手"></div>
+          <div>
+            <div class="brand-line">
+              <h1>双色球每日娱乐选号</h1>
+              <span class="brand-badge">概率实验室</span>
+            </div>
+            <div class="sub">历史数据驱动的娱乐生成器。每一种合法组合的理论中奖概率完全相同。</div>
+          </div>
+        </div>
+        <div class="date-pill" id="todayText"></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="toolbar" aria-label="生成工具栏">
+        <div class="settings">
+          <label>
+            短信前缀
+            <input id="smsPrefix" value="00CP#01#" autocomplete="off">
+          </label>
+          <label>
+            短信后缀模板
+            <input id="smsSuffix" value="#1##zmU3" autocomplete="off">
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn" id="generateBtn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v7h-7"/></svg>
+            生成10组
+          </button>
+          <button class="btn blue" id="smsBtn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+            生成短信格式
+          </button>
+        </div>
+      </section>
+
+      <section class="content">
+        <div class="grid" id="tickets"></div>
+
+        <aside>
+          <section class="panel">
+            <h2 class="panel-title">短信格式</h2>
+            <textarea id="smsOutput" spellcheck="false" placeholder="点击“生成短信格式”后显示"></textarea>
+            <div class="actions" style="margin-top: 10px;">
+              <button class="btn secondary" id="copyBtn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                复制
+              </button>
+              <button class="btn secondary" id="savePurchaseBtn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+                保存为已购买
+              </button>
+            </div>
+            <p class="notice">按多注短信拼接：每注为 红球六码*蓝球，每条最多 5 注，注与注之间用 ** 连接；每条短信最后 4 位尾码自动保持不同。</p>
+          </section>
+
+          <section class="panel">
+            <h2 class="panel-title">我买的号码</h2>
+            <div class="stat-list" id="purchaseStats"></div>
+            <textarea id="purchaseHistory" spellcheck="false" readonly style="min-height: 132px;" placeholder="通过本地服务打开后，可保存和读取投注记录"></textarea>
+            <p class="method">记录保存在本机 outputs/data/purchases.json。只有通过 Node 本地服务打开时才会写入文件。</p>
+          </section>
+
+          <section class="panel">
+            <h2 class="panel-title">昨日回测与避重</h2>
+            <label>
+              上期开奖
+              <input id="lastDrawInput" value="04 06 10 18 23 31 + 11" autocomplete="off">
+            </label>
+            <label style="margin-top: 10px;">
+              昨日购买短信
+              <textarea id="previousSmsInput" spellcheck="false" style="min-height: 132px;">00CP#01#010210142327*01**040709122327*11**011520232830*16**011012212629*04**030712262833*15#1##zmU3
+00CP#01#030812202731*06**041020212631*12**040717192526*06**040913212328*03**050912151724*08#1##zmU3</textarea>
+            </label>
+            <div class="actions" style="margin-top: 10px;">
+              <button class="btn secondary" id="reviewBtn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                回测
+              </button>
+            </div>
+            <div class="stat-list" id="reviewStats" style="margin-top: 10px;"></div>
+            <p class="method">生成时会避开昨日完整重复，控制上期重号和旧单重合度；这只是分散组合，不代表概率提升。</p>
+          </section>
+
+          <section class="panel">
+            <h2 class="panel-title">历史样本</h2>
+            <div class="stat-list" id="profileStats"></div>
+            <p class="method">来源：双色球近10年历史数据.csv。生成时用贝叶斯平滑的历史形态概率评分和最大熵分散约束；冷号不扣分，热号只做轻微正向加分。</p>
+          </section>
+
+          <section class="panel">
+            <details open>
+              <summary>内置提示词</summary>
+              我是一个双色球娱乐选号器。基于近10年历史开奖数据，先用蒙特卡洛方式生成候选池，再用贝叶斯平滑后的奇偶比、大小比、三区比、连号数量、和值区间、跨度区间、AC 值和红球尾数分散度计算形态似然；再加入最大熵分散评分、轻微热号正向加分和个人避重规则，从高分候选中随机抽取。冷号不作为负面因素；输出只作娱乐参考，明确没有任何概率优势。
+            </details>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let PROFILE = {
+      sourceFile: "双色球近10年历史数据.csv",
+      drawCount: 1496,
+      issueStart: "2016089",
+      issueEnd: "2026086",
+      dateStart: "2016-08-02",
+      dateEnd: "2026-07-28",
+      redFreq: [291,302,262,262,263,309,277,275,297,292,260,259,260,301,280,247,276,280,279,267,231,289,263,278,264,281,285,238,240,263,261,276,268],
+      blueFreq: [110,91,96,103,92,97,98,93,75,85,85,88,78,87,109,109],
+      tailFreq: [822,1043,1126,1053,841,807,837,838,793,816],
+      oddDist: [{value:"3",count:541},{value:"4",count:365},{value:"2",count:342},{value:"5",count:117},{value:"1",count:103},{value:"6",count:17},{value:"0",count:11}],
+      sizeDist: [{value:"3",count:525},{value:"2",count:375},{value:"4",count:360},{value:"1",count:115},{value:"5",count:97},{value:"0",count:12},{value:"6",count:12}],
+      zoneDist: [{value:"2-2-2",count:238},{value:"3-1-2",count:145},{value:"3-2-1",count:141},{value:"2-1-3",count:140},{value:"2-3-1",count:132},{value:"1-3-2",count:127},{value:"1-2-3",count:123},{value:"1-4-1",count:51},{value:"4-1-1",count:49},{value:"1-1-4",count:48},{value:"3-3-0",count:41},{value:"4-2-0",count:41},{value:"3-0-3",count:37},{value:"0-3-3",count:32},{value:"2-0-4",count:28},{value:"0-2-4",count:22},{value:"0-4-2",count:22},{value:"2-4-0",count:22},{value:"4-0-2",count:18},{value:"0-5-1",count:9},{value:"5-1-0",count:8},{value:"5-0-1",count:7},{value:"1-0-5",count:5},{value:"1-5-0",count:5},{value:"0-1-5",count:3},{value:"6-0-0",count:2}],
+      consecutiveDist: [{value:"1",count:681},{value:"0",count:529},{value:"2",count:244},{value:"3",count:40},{value:"4",count:2}],
+      sumBandDist: [{value:"87-100",count:373},{value:"101-114",count:371},{value:"115-128",count:241},{value:"74-86",count:222},{value:"29-73",count:148},{value:"129-172",count:141}],
+      spanBandDist: [{value:"23-26",count:454},{value:"27-30",count:424},{value:"18-22",count:333},{value:"5-17",count:158},{value:"31-32",count:127}],
+      acDist: [{value:"8",count:446},{value:"7",count:310},{value:"6",count:235},{value:"9",count:214},{value:"10",count:131},{value:"5",count:95},{value:"4",count:50},{value:"3",count:13},{value:"2",count:2}],
+      tailDistinctDist: [{value:"5",count:759},{value:"4",count:359},{value:"6",count:352},{value:"3",count:26}],
+      tailMaxSameDist: [{value:"2",count:1061},{value:"1",count:352},{value:"3",count:82},{value:"4",count:1}],
+      tailRepeatDist: [{value:"1",count:824},{value:"0",count:352},{value:"2",count:313},{value:"3",count:7}],
+      tailSpanDist: [{value:"7",count:398},{value:"8",count:389},{value:"9",count:273},{value:"6",count:245},{value:"5",count:122},{value:"4",count:56},{value:"3",count:12},{value:"2",count:1}],
+      sumStats: {min:29,q10:74,q25:87,median:101,q75:115,q90:128,max:172},
+      spanStats: {min:9,q10:17,q25:21,median:25,q75:28,q90:30,max:32}
+    };
+
+    const RED_MIN = 1;
+    const RED_MAX = 33;
+    const BLUE_MIN = 1;
+    const BLUE_MAX = 16;
+    const SMALL_RED_MAX = 16;
+    const groups = [];
+    const $ = (id) => document.getElementById(id);
+    const PURCHASES_API = "/api/purchases";
+    const PROFILE_API = "/api/profile";
+    const pad2 = (num) => String(num).padStart(2, "0");
+    const sum = (arr) => arr.reduce((acc, item) => acc + item, 0);
+    const parseBand = (value) => value.split("-").map(Number);
+
+    let redWeights = [];
+    let blueWeights = [];
+    let redPools = [];
+
+    function refreshRuntimeFromProfile() {
+      redWeights = buildHotOnlyWeights(PROFILE.redFreq, 0.16);
+      blueWeights = buildHotOnlyWeights(PROFILE.blueFreq, 0.22);
+      redPools = [
+        weightedNumberPool(1, 11, redWeights),
+        weightedNumberPool(12, 22, redWeights),
+        weightedNumberPool(23, 33, redWeights)
+      ];
+    }
+
+    function randomFloat() {
+      const bytes = new Uint32Array(1);
+      crypto.getRandomValues(bytes);
+      return bytes[0] / 4294967296;
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(randomFloat() * (max - min + 1)) + min;
+    }
+
+    function buildHotOnlyWeights(freq, strength) {
+      const average = freq.reduce((a, b) => a + b, 0) / freq.length;
+      const max = Math.max(...freq);
+      return freq.map((count, index) => ({
+        value: index + 1,
+        weight: 1 + strength * Math.max(0, (count - average) / Math.max(1, max - average)),
+        count
+      }));
+    }
+
+    function weightedNumberPool(start, end, weights) {
+      return weights.filter((item) => item.value >= start && item.value <= end);
+    }
+
+    refreshRuntimeFromProfile();
+
+    function weightedPick(items) {
+      const total = items.reduce((acc, item) => acc + item.weight, 0);
+      let cursor = randomFloat() * total;
+      for (const item of items) {
+        cursor -= item.weight;
+        if (cursor <= 0) return item.value;
+      }
+      return items[items.length - 1].value;
+    }
+
+    function weightedDistPick(dist, options = {}) {
+      const filtered = dist.filter((item) => {
+        if (options.exclude && options.exclude.includes(item.value)) return false;
+        if (options.allow && !options.allow.includes(item.value)) return false;
+        return true;
+      });
+      return weightedPick(filtered.map((item) => ({ value: item.value, weight: item.count })));
+    }
+
+    function pickWeightedUnique(pool, count, used = new Set()) {
+      const result = [];
+      const localUsed = new Set(used);
+      while (result.length < count) {
+        const available = pool.filter((item) => !localUsed.has(item.value));
+        if (!available.length) break;
+        const value = weightedPick(available);
+        localUsed.add(value);
+        result.push(value);
+      }
+      return result;
+    }
+
+    function countOdd(nums) {
+      return nums.filter((num) => num % 2 === 1).length;
+    }
+
+    function countSmall(nums) {
+      return nums.filter((num) => num <= SMALL_RED_MAX).length;
+    }
+
+    function zoneCounts(nums) {
+      return [
+        nums.filter((num) => num <= 11).length,
+        nums.filter((num) => num >= 12 && num <= 22).length,
+        nums.filter((num) => num >= 23).length
+      ];
+    }
+
+    function consecutiveInfo(nums) {
+      let pairs = 0;
+      let maxRun = 1;
+      let run = 1;
+      for (let i = 1; i < nums.length; i += 1) {
+        if (nums[i] === nums[i - 1] + 1) {
+          pairs += 1;
+          run += 1;
+          maxRun = Math.max(maxRun, run);
+        } else {
+          run = 1;
+        }
+      }
+      return { pairs, maxRun };
+    }
+
+    function acValue(nums) {
+      const diffs = new Set();
+      for (let i = 0; i < nums.length; i += 1) {
+        for (let j = i + 1; j < nums.length; j += 1) {
+          diffs.add(nums[j] - nums[i]);
+        }
+      }
+      return diffs.size - (nums.length - 1);
+    }
+
+    function redTailInfo(nums) {
+      const counts = Array(10).fill(0);
+      nums.forEach((num) => counts[num % 10] += 1);
+      const used = counts.filter((count) => count > 0);
+      const usedDigits = counts
+        .map((count, digit) => ({ count, digit }))
+        .filter((item) => item.count > 0)
+        .map((item) => item.digit);
+      return {
+        counts,
+        distinct: used.length,
+        maxSame: Math.max(...used),
+        repeatGroups: used.filter((count) => count >= 2).length,
+        span: Math.max(...usedDigits) - Math.min(...usedDigits)
+      };
+    }
+
+    function shapeOf(reds) {
+      const total = sum(reds);
+      const span = reds[reds.length - 1] - reds[0];
+      const consecutive = consecutiveInfo(reds);
+      const tails = redTailInfo(reds);
+      return {
+        odd: countOdd(reds),
+        small: countSmall(reds),
+        zone: zoneCounts(reds).join("-"),
+        total,
+        span,
+        consecutivePairs: consecutive.pairs,
+        maxRun: consecutive.maxRun,
+        ac: acValue(reds),
+        tailDistinct: tails.distinct,
+        tailMaxSame: tails.maxSame,
+        tailRepeatGroups: tails.repeatGroups,
+        tailSpan: tails.span,
+        tailCounts: tails.counts
+      };
+    }
+
+    function hasExtremeShape(shape) {
+      return shape.odd === 0 ||
+        shape.odd === 6 ||
+        shape.small === 0 ||
+        shape.small === 6 ||
+        shape.maxRun >= 6 ||
+        shape.total < PROFILE.sumStats.q10 ||
+        shape.total > PROFILE.sumStats.q90 ||
+        shape.span < PROFILE.spanStats.q10 ||
+        shape.span > PROFILE.spanStats.q90 ||
+        shape.tailDistinct < 4 ||
+        shape.tailMaxSame > 2 ||
+        shape.tailSpan < 5;
+    }
+
+    function makeTarget() {
+      return {
+        odd: Number(weightedDistPick(PROFILE.oddDist, { exclude: ["0", "6"] })),
+        small: Number(weightedDistPick(PROFILE.sizeDist, { exclude: ["0", "6"] })),
+        zone: weightedDistPick(PROFILE.zoneDist, { exclude: ["6-0-0", "0-6-0", "0-0-6"] }),
+        consecutive: Number(weightedDistPick(PROFILE.consecutiveDist, { allow: ["0", "1", "2"] })),
+        sumBand: parseBand(weightedDistPick(PROFILE.sumBandDist, { allow: ["74-86", "87-100", "101-114", "115-128"] })),
+        spanBand: parseBand(weightedDistPick(PROFILE.spanBandDist, { allow: ["18-22", "23-26", "27-30"] })),
+        ac: Number(weightedDistPick(PROFILE.acDist, { allow: ["5", "6", "7", "8", "9", "10"] })),
+        tailDistinct: Number(weightedDistPick(PROFILE.tailDistinctDist, { allow: ["4", "5", "6"] })),
+        tailMaxSame: Number(weightedDistPick(PROFILE.tailMaxSameDist, { allow: ["1", "2"] })),
+        tailRepeatGroups: Number(weightedDistPick(PROFILE.tailRepeatDist, { allow: ["0", "1", "2"] })),
+        tailSpan: Number(weightedDistPick(PROFILE.tailSpanDist, { allow: ["5", "6", "7", "8", "9"] }))
+      };
+    }
+
+    function targetMatches(shape, target) {
+      return shape.odd === target.odd &&
+        shape.small === target.small &&
+        shape.zone === target.zone &&
+        shape.consecutivePairs === target.consecutive &&
+        shape.total >= target.sumBand[0] &&
+        shape.total <= target.sumBand[1] &&
+        shape.span >= target.spanBand[0] &&
+        shape.span <= target.spanBand[1] &&
+        Math.abs(shape.ac - target.ac) <= 1 &&
+        shape.tailDistinct === target.tailDistinct &&
+        shape.tailMaxSame === target.tailMaxSame &&
+        Math.abs(shape.tailRepeatGroups - target.tailRepeatGroups) <= 1 &&
+        Math.abs(shape.tailSpan - target.tailSpan) <= 1 &&
+        !hasExtremeShape(shape);
+    }
+
+    function looseTargetMatches(shape, target) {
+      return Math.abs(shape.odd - target.odd) <= 1 &&
+        Math.abs(shape.small - target.small) <= 1 &&
+        shape.total >= PROFILE.sumStats.q10 &&
+        shape.total <= PROFILE.sumStats.q90 &&
+        shape.span >= PROFILE.spanStats.q10 &&
+        shape.span <= PROFILE.spanStats.q90 &&
+        shape.consecutivePairs <= 2 &&
+        shape.ac >= 5 &&
+        shape.ac <= 10 &&
+        shape.tailDistinct >= 4 &&
+        shape.tailMaxSame <= 2 &&
+        shape.tailSpan >= 5 &&
+        !hasExtremeShape(shape);
+    }
+
+    function distCount(dist, value) {
+      const found = dist.find((item) => item.value === String(value));
+      return found ? found.count : 0;
+    }
+
+    function bayesLogProb(dist, value, alpha = 1) {
+      const total = dist.reduce((acc, item) => acc + item.count, 0);
+      const count = distCount(dist, value);
+      return Math.log((count + alpha) / (total + alpha * dist.length));
+    }
+
+    function bandValue(dist, num) {
+      const found = dist.find((item) => {
+        const [low, high] = parseBand(item.value);
+        return num >= low && num <= high;
+      });
+      return found ? found.value : dist[dist.length - 1].value;
+    }
+
+    function normalizedEntropy(counts) {
+      const total = counts.reduce((acc, count) => acc + count, 0);
+      const active = counts.filter((count) => count > 0).length;
+      if (!total || active <= 1) return 0;
+      const entropy = counts.reduce((acc, count) => {
+        if (!count) return acc;
+        const p = count / total;
+        return acc - p * Math.log(p);
+      }, 0);
+      return entropy / Math.log(counts.length);
+    }
+
+    function gapEntropy(reds) {
+      const gaps = [];
+      for (let i = 1; i < reds.length; i += 1) {
+        gaps.push(reds[i] - reds[i - 1]);
+      }
+      return normalizedEntropy(gaps);
+    }
+
+    function hotOnlyBonus(freq, nums, strength) {
+      const average = freq.reduce((acc, count) => acc + count, 0) / freq.length;
+      const max = Math.max(...freq);
+      return nums.reduce((acc, num) => {
+        const count = freq[num - 1] || average;
+        return acc + strength * Math.max(0, (count - average) / Math.max(1, max - average));
+      }, 0);
+    }
+
+    function probabilityScore(red, blue) {
+      const shape = shapeOf(red);
+      const sumBand = bandValue(PROFILE.sumBandDist, shape.total);
+      const spanBand = bandValue(PROFILE.spanBandDist, shape.span);
+      let score = 0;
+      score += 1.35 * bayesLogProb(PROFILE.oddDist, shape.odd);
+      score += 1.20 * bayesLogProb(PROFILE.sizeDist, shape.small);
+      score += 1.45 * bayesLogProb(PROFILE.zoneDist, shape.zone);
+      score += 1.05 * bayesLogProb(PROFILE.consecutiveDist, shape.consecutivePairs);
+      score += 1.45 * bayesLogProb(PROFILE.sumBandDist, sumBand);
+      score += 1.05 * bayesLogProb(PROFILE.spanBandDist, spanBand);
+      score += 0.85 * bayesLogProb(PROFILE.acDist, shape.ac);
+      score += 1.10 * bayesLogProb(PROFILE.tailDistinctDist, shape.tailDistinct);
+      score += 0.95 * bayesLogProb(PROFILE.tailMaxSameDist, shape.tailMaxSame);
+      score += 0.70 * bayesLogProb(PROFILE.tailRepeatDist, shape.tailRepeatGroups);
+      score += 0.70 * bayesLogProb(PROFILE.tailSpanDist, shape.tailSpan);
+      score += 0.55 * normalizedEntropy(shape.tailCounts);
+      score += 0.30 * gapEntropy(red);
+      score += hotOnlyBonus(PROFILE.redFreq, red, 0.045);
+      score += hotOnlyBonus(PROFILE.blueFreq, [blue], 0.08);
+      return score;
+    }
+
+    function probabilityCandidateOk(shape) {
+      return !hasExtremeShape(shape) &&
+        shape.consecutivePairs <= 2 &&
+        shape.ac >= 5 &&
+        shape.ac <= 10 &&
+        shape.tailDistinct >= 4 &&
+        shape.tailMaxSame <= 2 &&
+        shape.tailSpan >= 5;
+    }
+
+    function softmaxPick(candidates, temperature = 0.7) {
+      const top = candidates.slice(0, Math.min(18, candidates.length));
+      const maxScore = Math.max(...top.map((item) => item.score));
+      const weighted = top.map((item) => ({
+        value: item,
+        weight: Math.exp((item.score - maxScore) / temperature)
+      }));
+      return weightedPick(weighted);
+    }
+
+    function drawByZonePattern(zonePattern) {
+      const counts = zonePattern.split("-").map(Number);
+      const used = new Set();
+      const reds = [];
+      counts.forEach((count, index) => {
+        const picked = pickWeightedUnique(redPools[index], count, used);
+        picked.forEach((num) => {
+          used.add(num);
+          reds.push(num);
+        });
+      });
+      return reds.sort((a, b) => a - b);
+    }
+
+    function drawAnyRedSet() {
+      const used = new Set();
+      const all = weightedNumberPool(RED_MIN, RED_MAX, redWeights);
+      return pickWeightedUnique(all, 6, used).sort((a, b) => a - b);
+    }
+
+    function makeRedSet() {
+      for (let attempt = 0; attempt < 1200; attempt += 1) {
+        const zone = weightedDistPick(PROFILE.zoneDist, { exclude: ["6-0-0", "0-6-0", "0-0-6"] });
+        const reds = randomFloat() < 0.82 ? drawByZonePattern(zone) : drawAnyRedSet();
+        const shape = shapeOf(reds);
+        if (probabilityCandidateOk(shape)) {
+          return { red: reds, score: probabilityScore(reds, 1), strict: true };
+        }
+      }
+
+      while (true) {
+        const reds = drawAnyRedSet();
+        const shape = shapeOf(reds);
+        if (probabilityCandidateOk(shape)) {
+          return { red: reds, score: probabilityScore(reds, 1), strict: false };
+        }
+      }
+    }
+
+    function wouldOverloadBatchTails(red, batchTailCounts) {
+      if (!batchTailCounts) return false;
+      const candidateCounts = redTailInfo(red).counts;
+      const totalAfter = batchTailCounts.reduce((acc, count) => acc + count, 0) + red.length;
+      const softCap = Math.max(3, Math.ceil(totalAfter / 10) + 2);
+      return candidateCounts.some((count, digit) => batchTailCounts[digit] + count > softCap);
+    }
+
+    function addBatchTails(red, batchTailCounts) {
+      if (!batchTailCounts) return;
+      redTailInfo(red).counts.forEach((count, digit) => {
+        batchTailCounts[digit] += count;
+      });
+    }
+
+    function groupKey(red, blue) {
+      return `${red.join(",")}|${blue}`;
+    }
+
+    function intersectionCount(left, right) {
+      const rightSet = new Set(right);
+      return left.filter((num) => rightSet.has(num)).length;
+    }
+
+    function parseLastDraw() {
+      const nums = ($("lastDrawInput")?.value.match(/\d{1,2}/g) || []).map(Number);
+      if (nums.length < 7) return null;
+      const red = nums.slice(0, 6).sort((a, b) => a - b);
+      const blue = nums[6];
+      const redValid = red.length === 6 &&
+        new Set(red).size === 6 &&
+        red.every((num) => num >= RED_MIN && num <= RED_MAX);
+      if (!redValid || blue < BLUE_MIN || blue > BLUE_MAX) return null;
+      return { red, blue };
+    }
+
+    function parseBetsFromText(text) {
+      const source = (text || "").replace(/\\/g, "");
+      const bets = [];
+      for (const match of source.matchAll(/(\d{12})\*(\d{2})/g)) {
+        const red = match[1].match(/\d{2}/g).map(Number).sort((a, b) => a - b);
+        const blue = Number(match[2]);
+        const redValid = red.length === 6 &&
+          new Set(red).size === 6 &&
+          red.every((num) => num >= RED_MIN && num <= RED_MAX);
+        if (redValid && blue >= BLUE_MIN && blue <= BLUE_MAX) {
+          bets.push({ red, blue });
+        }
+      }
+      return bets;
+    }
+
+    function parsePreviousSms() {
+      return parseBetsFromText($("previousSmsInput")?.value || "");
+    }
+
+    function getAvoidanceContext() {
+      const previousBets = parsePreviousSms();
+      return {
+        lastDraw: parseLastDraw(),
+        previousBets,
+        previousKeys: new Set(previousBets.map((bet) => groupKey(bet.red, bet.blue)))
+      };
+    }
+
+    function overlapWithPrevious(red, blue, context = getAvoidanceContext()) {
+      let maxRed = 0;
+      let sameBlueMaxRed = 0;
+      context.previousBets.forEach((bet) => {
+        const redHits = intersectionCount(red, bet.red);
+        maxRed = Math.max(maxRed, redHits);
+        if (blue === bet.blue) {
+          sameBlueMaxRed = Math.max(sameBlueMaxRed, redHits);
+        }
+      });
+      return { maxRed, sameBlueMaxRed };
+    }
+
+    function conflictsWithAvoidance(red, blue, context) {
+      if (!context) return false;
+      if (context.previousKeys.has(groupKey(red, blue))) return true;
+      const previous = overlapWithPrevious(red, blue, context);
+      if (previous.maxRed >= 5) return true;
+      if (previous.sameBlueMaxRed >= 4) return true;
+      if (context.lastDraw) {
+        const redRepeat = intersectionCount(red, context.lastDraw.red);
+        if (redRepeat > 2) return true;
+        if (blue === context.lastDraw.blue && redRepeat >= 1) return true;
+      }
+      return false;
+    }
+
+    function makeGroup(existingKeys = new Set(), batchTailCounts = null, avoidContext = null) {
+      const candidates = [];
+      for (let attempt = 0; attempt < 900; attempt += 1) {
+        const redResult = makeRedSet();
+        const blue = weightedPick(blueWeights);
+        const key = groupKey(redResult.red, blue);
+        if (!existingKeys.has(key) &&
+            !wouldOverloadBatchTails(redResult.red, batchTailCounts) &&
+            !conflictsWithAvoidance(redResult.red, blue, avoidContext)) {
+          candidates.push({
+            red: redResult.red,
+            blue,
+            strict: redResult.strict,
+            score: probabilityScore(redResult.red, blue)
+          });
+        }
+      }
+
+      if (candidates.length) {
+        candidates.sort((a, b) => b.score - a.score);
+        const picked = softmaxPick(candidates, 0.55);
+        existingKeys.add(groupKey(picked.red, picked.blue));
+        addBatchTails(picked.red, batchTailCounts);
+        return picked;
+      }
+
+      const fallbackCandidates = [];
+      for (let attempt = 0; attempt < 1600; attempt += 1) {
+        const redResult = makeRedSet();
+        const blue = weightedPick(blueWeights);
+        if (!conflictsWithAvoidance(redResult.red, blue, avoidContext)) {
+          fallbackCandidates.push({
+            red: redResult.red,
+            blue,
+            strict: false,
+            score: probabilityScore(redResult.red, blue) - 0.8
+          });
+        }
+      }
+
+      if (fallbackCandidates.length) {
+        fallbackCandidates.sort((a, b) => b.score - a.score);
+        const picked = softmaxPick(fallbackCandidates, 0.65);
+        addBatchTails(picked.red, batchTailCounts);
+        return picked;
+      }
+
+      const redResult = makeRedSet();
+      const blue = weightedPick(blueWeights);
+      addBatchTails(redResult.red, batchTailCounts);
+      return { red: redResult.red, blue, strict: false, score: probabilityScore(redResult.red, blue) };
+    }
+
+    function describeGroup(group) {
+      const shape = shapeOf(group.red);
+      const context = getAvoidanceContext();
+      const lastRepeat = context.lastDraw ? intersectionCount(group.red, context.lastDraw.red) : 0;
+      const previous = overlapWithPrevious(group.red, group.blue, context);
+      return {
+        oddEven: `${shape.odd}奇${6 - shape.odd}偶`,
+        size: `${shape.small}小${6 - shape.small}大`,
+        sum: `和值${shape.total}`,
+        zone: `三区${shape.zone}`,
+        consecutive: shape.consecutivePairs === 0 ? "无连号" : `${shape.consecutivePairs}处连号`,
+        span: `跨度${shape.span}`,
+        ac: `AC${shape.ac}`,
+        tail: `尾数${shape.tailDistinct}种`,
+        tailRepeat: `尾重${shape.tailMaxSame}`,
+        recent: context.lastDraw ? `上期重${lastRepeat}${group.blue === context.lastDraw.blue ? "+蓝" : ""}` : "上期未填",
+        old: `旧单重${previous.maxRed}`,
+        score: `评分${(group.score || probabilityScore(group.red, group.blue)).toFixed(1)}`,
+        strict: group.strict ? "概率优选" : "备用优选"
+      };
+    }
+
+    function formatSms(group) {
+      const prefix = $("smsPrefix").value;
+      const suffix = $("smsSuffix").value;
+      return `${prefix}${group.red.map(pad2).join("")}*${pad2(group.blue)}${suffix}`;
+    }
+
+    function formatBet(group) {
+      return `${group.red.map(pad2).join("")}*${pad2(group.blue)}`;
+    }
+
+    function splitSuffixTemplate() {
+      const suffix = $("smsSuffix").value;
+      if (suffix.length < 4) {
+        return { base: suffix, seed: "" };
+      }
+      return {
+        base: suffix.slice(0, -4),
+        seed: suffix.slice(-4)
+      };
+    }
+
+    function randomTailCode(length = 4) {
+      const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      let code = "";
+      for (let i = 0; i < length; i += 1) {
+        code += chars[randomInt(0, chars.length - 1)];
+      }
+      return code;
+    }
+
+    function uniqueTailCode(used, preferred = "") {
+      if (preferred && !used.has(preferred)) {
+        used.add(preferred);
+        return preferred;
+      }
+      let code = randomTailCode(4);
+      while (used.has(code)) {
+        code = randomTailCode(4);
+      }
+      used.add(code);
+      return code;
+    }
+
+    function formatSmsBatches(batchSize = 5) {
+      const prefix = $("smsPrefix").value;
+      const suffixTemplate = splitSuffixTemplate();
+      const usedTailCodes = new Set();
+      const batches = [];
+      for (let i = 0; i < groups.length; i += batchSize) {
+        const tailCode = uniqueTailCode(usedTailCodes, i === 0 ? suffixTemplate.seed : "");
+        batches.push(`${prefix}${groups.slice(i, i + batchSize).map(formatBet).join("**")}${suffixTemplate.base}${tailCode}`);
+      }
+      return batches;
+    }
+
+    function renderReview() {
+      const draw = parseLastDraw();
+      const bets = parsePreviousSms();
+      const root = $("reviewStats");
+      if (!draw || !bets.length) {
+        root.innerHTML = `
+          <span class="tag amber">待补充</span>
+          <span class="tag">请输入上期开奖和昨日短信</span>
+        `;
+        return;
+      }
+
+      let bestRed = 0;
+      let bestBlue = false;
+      let bestIndex = 0;
+      let blueHits = 0;
+      const redHitBuckets = new Map();
+      bets.forEach((bet, index) => {
+        const redHits = intersectionCount(bet.red, draw.red);
+        const blueHit = bet.blue === draw.blue;
+        redHitBuckets.set(redHits, (redHitBuckets.get(redHits) || 0) + 1);
+        if (blueHit) blueHits += 1;
+        if (redHits > bestRed || (redHits === bestRed && blueHit && !bestBlue)) {
+          bestRed = redHits;
+          bestBlue = blueHit;
+          bestIndex = index + 1;
+        }
+      });
+      const bucketText = [...redHitBuckets.entries()]
+        .sort((a, b) => b[0] - a[0])
+        .map(([hits, count]) => `${hits}红${count}注`)
+        .join(" ");
+
+      root.innerHTML = `
+        <span class="tag green">解析${bets.length}注</span>
+        <span class="tag amber">最佳第${pad2(bestIndex)}注：${bestRed}红${bestBlue ? "+蓝" : ""}</span>
+        <span class="tag">蓝中${blueHits}注</span>
+        <span class="tag">${bucketText}</span>
+        <span class="tag">下次上期重号≤2</span>
+        <span class="tag">避开昨日完整重复</span>
+      `;
+    }
+
+    function renderTickets() {
+      const root = $("tickets");
+      root.innerHTML = "";
+      groups.forEach((group, index) => {
+        const desc = describeGroup(group);
+        const ticket = document.createElement("article");
+        ticket.className = "ticket";
+        ticket.innerHTML = `
+          <div class="ticket-head">
+            <div class="ticket-index">第 ${pad2(index + 1)} 组</div>
+            <button class="mini-btn" type="button" title="单独换一组" aria-label="单独换一组" data-reroll="${index}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v7h-7"/></svg>
+            </button>
+          </div>
+          <div class="balls">
+            ${group.red.map((num) => `<span class="ball red">${pad2(num)}</span>`).join("")}
+            <span class="ball blue">${pad2(group.blue)}</span>
+          </div>
+          <div class="meta">
+            <span class="tag green">${desc.oddEven}</span>
+            <span class="tag">${desc.size}</span>
+            <span class="tag amber">${desc.sum}</span>
+            <span class="tag">${desc.zone}</span>
+            <span class="tag">${desc.consecutive}</span>
+            <span class="tag">${desc.span}</span>
+            <span class="tag">${desc.ac}</span>
+            <span class="tag green">${desc.tail}</span>
+            <span class="tag">${desc.tailRepeat}</span>
+            <span class="tag amber">${desc.recent}</span>
+            <span class="tag">${desc.old}</span>
+            <span class="tag green">${desc.score}</span>
+            <span class="tag">${desc.strict}</span>
+          </div>
+        `;
+        root.appendChild(ticket);
+      });
+    }
+
+    function formatDrawInput(draw) {
+      if (!draw || !Array.isArray(draw.red) || !draw.blue) return "";
+      return `${draw.red.map(pad2).join(" ")} + ${pad2(draw.blue)}`;
+    }
+
+    async function loadProfile() {
+      try {
+        const response = await fetch(PROFILE_API);
+        if (!response.ok) throw new Error("sync failed");
+        const latestProfile = await response.json();
+        if (latestProfile && Array.isArray(latestProfile.redFreq) && latestProfile.redFreq.length === 33) {
+          PROFILE = latestProfile;
+          refreshRuntimeFromProfile();
+          if (PROFILE.latestDraw) {
+            $("lastDrawInput").value = formatDrawInput(PROFILE.latestDraw);
+          }
+          showToast(PROFILE.syncStatus === "fresh" ? "已同步最新开奖数据" : "已读取开奖缓存");
+        }
+      } catch {
+        showToast("同步失败，使用页面内置历史数据");
+      }
+    }
+
+    function renderProfile() {
+      const topRed = PROFILE.redFreq
+        .map((count, index) => ({ num: index + 1, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+        .map((item) => `${pad2(item.num)}(${item.count})`)
+        .join(" ");
+      const topBlue = PROFILE.blueFreq
+        .map((count, index) => ({ num: index + 1, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3)
+        .map((item) => `${pad2(item.num)}(${item.count})`)
+        .join(" ");
+      const topTail = PROFILE.tailFreq
+        .map((count, digit) => ({ digit, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3)
+        .map((item) => `${item.digit}尾(${item.count})`)
+        .join(" ");
+      const latestDraw = PROFILE.latestDraw
+        ? `${PROFILE.latestDraw.issue}：${formatDrawInput(PROFILE.latestDraw)}`
+        : "暂无最新期";
+      const syncText = PROFILE.syncedAt
+        ? new Date(PROFILE.syncedAt).toLocaleString("zh-CN", { hour12: false })
+        : "内置数据";
+      $("profileStats").innerHTML = `
+        <span class="tag green">${PROFILE.drawCount}期</span>
+        <span class="tag">${PROFILE.dateStart} 至 ${PROFILE.dateEnd}</span>
+        <span class="tag amber">最新 ${latestDraw}</span>
+        <span class="tag">同步 ${syncText}</span>
+        <span class="tag">常见奇偶 ${PROFILE.oddDist[0].value}奇${6 - Number(PROFILE.oddDist[0].value)}偶</span>
+        <span class="tag">常见三区 ${PROFILE.zoneDist[0].value}</span>
+        <span class="tag">常见尾数 ${PROFILE.tailDistinctDist[0].value}种</span>
+        <span class="tag amber">和值P10-P90 ${PROFILE.sumStats.q10}-${PROFILE.sumStats.q90}</span>
+        <span class="tag">红热 ${topRed}</span>
+        <span class="tag">蓝热 ${topBlue}</span>
+        <span class="tag">尾热 ${topTail}</span>
+      `;
+    }
+
+    function generateAll() {
+      renderReview();
+      groups.length = 0;
+      const keys = new Set();
+      const batchTailCounts = Array(10).fill(0);
+      const avoidContext = getAvoidanceContext();
+      for (let i = 0; i < 10; i += 1) {
+        groups.push(makeGroup(keys, batchTailCounts, avoidContext));
+      }
+      renderTickets();
+      $("smsOutput").value = "";
+      showToast("已按历史分布生成 10 组");
+    }
+
+    function generateSms() {
+      if (!groups.length) {
+        generateAll();
+      }
+      $("smsOutput").value = formatSmsBatches(5).join("\n");
+      showToast("短信格式已生成");
+    }
+
+    async function copySms() {
+      if (!$("smsOutput").value.trim()) {
+        generateSms();
+      }
+      try {
+        await navigator.clipboard.writeText($("smsOutput").value);
+        showToast("已复制短信格式");
+      } catch {
+        $("smsOutput").select();
+        document.execCommand("copy");
+        showToast("已复制短信格式");
+      }
+    }
+
+    function currentSmsLines() {
+      if (!$("smsOutput").value.trim()) {
+        generateSms();
+      }
+      return $("smsOutput").value.trim().split(/\n/).map((line) => line.trim()).filter(Boolean);
+    }
+
+    function formatPurchaseRecord(record, index) {
+      const time = new Date(record.createdAt).toLocaleString("zh-CN", { hour12: false });
+      const lines = (record.smsLines || []).join("\n");
+      return `#${index + 1} ${time}，${record.betCount || 0}注\n${lines}`;
+    }
+
+    function renderPurchases(records = []) {
+      const recent = records.slice(-5).reverse();
+      $("purchaseStats").innerHTML = records.length
+        ? `
+          <span class="tag green">已保存${records.length}次</span>
+          <span class="tag">最近${recent[0]?.betCount || 0}注</span>
+          <span class="tag">文件落盘</span>
+        `
+        : `
+          <span class="tag amber">暂无记录</span>
+          <span class="tag">点击保存为已购买</span>
+        `;
+      $("purchaseHistory").value = recent.map(formatPurchaseRecord).join("\n\n");
+    }
+
+    async function loadPurchases() {
+      try {
+        const response = await fetch(PURCHASES_API);
+        if (!response.ok) throw new Error("load failed");
+        const records = await response.json();
+        renderPurchases(records);
+      } catch {
+        $("purchaseStats").innerHTML = `
+          <span class="tag amber">未连接本地服务</span>
+          <span class="tag">用 node outputs/ssq_server.js 打开</span>
+        `;
+      }
+    }
+
+    async function savePurchase() {
+      const smsLines = currentSmsLines();
+      const bets = parseBetsFromText(smsLines.join("\n"));
+      if (!smsLines.length || bets.length !== groups.length) {
+        showToast("短信格式未生成或解析不完整");
+        return;
+      }
+
+      const payload = {
+        smsLines,
+        bets,
+        lastDraw: parseLastDraw(),
+        savedFrom: "ssq_daily_generator"
+      };
+
+      try {
+        const response = await fetch(PURCHASES_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const records = await response.json();
+        renderPurchases(records);
+        $("previousSmsInput").value = smsLines.join("\n");
+        renderReview();
+        showToast("已保存为我买的号码");
+      } catch {
+        showToast("保存失败：请通过本地服务打开页面");
+      }
+    }
+
+    function rerollOne(index) {
+      const keys = new Set(groups.map((group, groupIndex) => {
+        if (groupIndex === index) return "";
+        return groupKey(group.red, group.blue);
+      }));
+      const batchTailCounts = Array(10).fill(0);
+      const avoidContext = getAvoidanceContext();
+      groups.forEach((group, groupIndex) => {
+        if (groupIndex !== index) addBatchTails(group.red, batchTailCounts);
+      });
+      groups[index] = makeGroup(keys, batchTailCounts, avoidContext);
+      renderTickets();
+      $("smsOutput").value = "";
+      showToast(`第 ${pad2(index + 1)} 组已更新`);
+    }
+
+    let toastTimer = 0;
+    function showToast(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    $("generateBtn").addEventListener("click", generateAll);
+    $("smsBtn").addEventListener("click", generateSms);
+    $("copyBtn").addEventListener("click", copySms);
+    $("savePurchaseBtn").addEventListener("click", savePurchase);
+    $("reviewBtn").addEventListener("click", renderReview);
+    $("lastDrawInput").addEventListener("input", renderReview);
+    $("previousSmsInput").addEventListener("input", renderReview);
+    $("tickets").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-reroll]");
+      if (button) {
+        rerollOne(Number(button.dataset.reroll));
+      }
+    });
+
+    $("todayText").textContent = new Intl.DateTimeFormat("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "long"
+    }).format(new Date());
+
+    async function initApp() {
+      await loadProfile();
+      renderProfile();
+      renderReview();
+      loadPurchases();
+      generateAll();
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
