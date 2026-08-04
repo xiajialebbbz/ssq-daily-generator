@@ -1,4 +1,4 @@
 data/*.json
 data/*.tmp
 *.log
-ssq-redesign-preview.png
+*-preview.png
