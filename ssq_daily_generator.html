@@ -288,6 +288,38 @@
       display: block;
     }
 
+    .trend-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .trend-controls select {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      color: var(--ink);
+      background: #ffffff;
+      font-weight: 700;
+    }
+
+    .trend-detail {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 9px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
     .history-tools {
       display: flex;
       align-items: center;
@@ -641,14 +673,29 @@
         <section class="panel chart-shell">
           <div class="chart-head">
             <div>
-              <h2 class="panel-title">蓝球走势</h2>
-              <p class="method">最近 <span id="blueTrendWindow">60</span> 期蓝球折线，虚线为移动均值的娱乐外推。</p>
+              <h2 class="panel-title">球号走势</h2>
+              <p class="method">最近 <span id="blueTrendWindow">60</span> 期位置折线，虚线为移动均值的娱乐外推；点击折线点查看期号。</p>
+              <div class="trend-controls">
+                <label>
+                  切换球号
+                  <select id="trendMetric" aria-label="走势图球号">
+                    <option value="red1">红球1号位</option>
+                    <option value="red2">红球2号位</option>
+                    <option value="red3">红球3号位</option>
+                    <option value="red4">红球4号位</option>
+                    <option value="red5">红球5号位</option>
+                    <option value="red6">红球6号位</option>
+                    <option value="blue" selected>蓝球</option>
+                  </select>
+                </label>
+              </div>
             </div>
             <div class="stat-list" id="blueTrendStats"></div>
           </div>
           <div class="chart-box">
             <canvas id="blueTrendChart" width="900" height="300"></canvas>
           </div>
+          <div class="trend-detail" id="blueTrendDetail">点击走势图上的圆点查看对应期号。</div>
         </section>
 
         <section class="panel">
@@ -689,6 +736,13 @@
             <div class="stat-list" id="purchaseStats"></div>
             <textarea id="purchaseHistory" spellcheck="false" readonly style="min-height: 132px;" placeholder="通过本地服务打开后，可保存和读取投注记录"></textarea>
             <p class="method">记录保存在本机 outputs/data/purchases.json。只有通过 Node 本地服务打开时才会写入文件。</p>
+          </section>
+
+          <section class="panel">
+            <h2 class="panel-title">开奖后评估</h2>
+            <div class="stat-list" id="predictionStats"></div>
+            <div class="history-list" id="predictionReview"></div>
+            <p class="method">按最新开奖复盘最近一次保存的号码，并用近期开奖做历史套测；概率只按组合数学计算，不代表预测能力。</p>
           </section>
 
           <section class="panel">
@@ -773,6 +827,9 @@
     let redWeights = [];
     let blueWeights = [];
     let redPools = [];
+    let purchaseRecords = [];
+    let trendPoints = [];
+    let selectedTrendIssue = "";
 
     function refreshRuntimeFromProfile() {
       redWeights = buildHotOnlyWeights(PROFILE.redFreq, 0.16);
@@ -1382,6 +1439,189 @@
       `;
     }
 
+    function combination(n, k) {
+      if (k < 0 || k > n) return 0;
+      const useK = Math.min(k, n - k);
+      let result = 1;
+      for (let i = 1; i <= useK; i += 1) {
+        result = result * (n - useK + i) / i;
+      }
+      return Math.round(result);
+    }
+
+    const TOTAL_COMBOS = combination(33, 6) * 16;
+    const ANY_PRIZE_COMBOS =
+      1 + 15 +
+      combination(6, 5) * combination(27, 1) +
+      combination(6, 5) * combination(27, 1) * 15 +
+      combination(6, 4) * combination(27, 2) +
+      combination(6, 4) * combination(27, 2) * 15 +
+      combination(6, 3) * combination(27, 3) +
+      combination(6, 2) * combination(27, 4) +
+      combination(6, 1) * combination(27, 5) +
+      combination(27, 6);
+
+    function formatPercent(value, digits = 4) {
+      return `${(value * 100).toFixed(digits)}%`;
+    }
+
+    function oddsText(probability) {
+      if (!probability) return "无";
+      return `约1/${Math.round(1 / probability).toLocaleString("zh-CN")}`;
+    }
+
+    function hitPatternProbability(redHits, blueHit) {
+      const ways = combination(6, redHits) * combination(27, 6 - redHits) * (blueHit ? 1 : 15);
+      return ways / TOTAL_COMBOS;
+    }
+
+    function prizeFor(redHits, blueHit) {
+      if (redHits === 6 && blueHit) return { name: "一等奖", rank: 1, amount: null };
+      if (redHits === 6) return { name: "二等奖", rank: 2, amount: null };
+      if (redHits === 5 && blueHit) return { name: "三等奖", rank: 3, amount: 3000 };
+      if (redHits === 5 || (redHits === 4 && blueHit)) return { name: "四等奖", rank: 4, amount: 200 };
+      if (redHits === 4 || (redHits === 3 && blueHit)) return { name: "五等奖", rank: 5, amount: 10 };
+      if (blueHit) return { name: "六等奖", rank: 6, amount: 5 };
+      return { name: "未中", rank: 9, amount: 0 };
+    }
+
+    function evaluateBet(bet, draw) {
+      const redHits = intersectionCount(bet.red, draw.red);
+      const blueHit = bet.blue === draw.blue;
+      const prize = prizeFor(redHits, blueHit);
+      return {
+        bet,
+        draw,
+        redHits,
+        blueHit,
+        prize,
+        probability: hitPatternProbability(redHits, blueHit)
+      };
+    }
+
+    function evaluateBets(bets, draw) {
+      return bets.map((bet, index) => ({ ...evaluateBet(bet, draw), index: index + 1 }));
+    }
+
+    function betFromGroup(group) {
+      return { red: group.red.slice().sort((a, b) => a - b), blue: group.blue };
+    }
+
+    function latestPredictionBets() {
+      const latest = purchaseRecords[purchaseRecords.length - 1];
+      if (latest && Array.isArray(latest.bets) && latest.bets.length) {
+        return {
+          label: "最近保存",
+          createdAt: latest.createdAt,
+          bets: latest.bets.map(betFromGroup)
+        };
+      }
+      if (groups.length) {
+        return { label: "当前生成", createdAt: "", bets: groups.map(betFromGroup) };
+      }
+      const previous = parsePreviousSms();
+      return previous.length ? { label: "昨日输入", createdAt: "", bets: previous } : null;
+    }
+
+    function summarizeEvaluations(evaluations) {
+      const prizeCounts = new Map();
+      let best = evaluations[0] || null;
+      let fixedAmount = 0;
+      evaluations.forEach((item) => {
+        prizeCounts.set(item.prize.name, (prizeCounts.get(item.prize.name) || 0) + 1);
+        if (item.prize.amount) fixedAmount += item.prize.amount;
+        if (!best || item.prize.rank < best.prize.rank ||
+            (item.prize.rank === best.prize.rank && item.redHits > best.redHits)) {
+          best = item;
+        }
+      });
+      return { prizeCounts, best, fixedAmount };
+    }
+
+    function backtestBets(bets, draws, limit = 100) {
+      const sample = draws.slice(0, limit);
+      let winningPeriods = 0;
+      let fixedAmount = 0;
+      let best = null;
+      const prizeCounts = new Map();
+      sample.forEach((draw) => {
+        const evaluations = evaluateBets(bets, draw);
+        const summary = summarizeEvaluations(evaluations);
+        fixedAmount += summary.fixedAmount;
+        if (summary.best && summary.best.prize.rank < 9) winningPeriods += 1;
+        evaluations.forEach((item) => {
+          if (item.prize.rank < 9) {
+            prizeCounts.set(item.prize.name, (prizeCounts.get(item.prize.name) || 0) + 1);
+          }
+        });
+        if (summary.best && (!best || summary.best.prize.rank < best.prize.rank ||
+            (summary.best.prize.rank === best.prize.rank && summary.best.redHits > best.redHits))) {
+          best = summary.best;
+        }
+      });
+      return { periods: sample.length, winningPeriods, fixedAmount, best, prizeCounts };
+    }
+
+    function renderPredictionReview() {
+      const stats = $("predictionStats");
+      const list = $("predictionReview");
+      if (!stats || !list) return;
+      const draw = PROFILE.latestDraw;
+      const source = latestPredictionBets();
+      if (!draw || !source || !source.bets.length) {
+        stats.innerHTML = `
+          <span class="tag amber">等待数据</span>
+          <span class="tag">保存号码后可复盘</span>
+        `;
+        list.innerHTML = "";
+        return;
+      }
+
+      const evaluations = evaluateBets(source.bets, draw);
+      const summary = summarizeEvaluations(evaluations);
+      const backtest = backtestBets(source.bets, getDraws(), 100);
+      const jackpotProbability = 1 - Math.pow(1 - 1 / TOTAL_COMBOS, source.bets.length);
+      const anyPrizeProbability = 1 - Math.pow(1 - ANY_PRIZE_COMBOS / TOTAL_COMBOS, source.bets.length);
+      const prizeText = [...summary.prizeCounts.entries()]
+        .filter(([name]) => name !== "未中")
+        .map(([name, count]) => `${name}${count}注`)
+        .join(" ") || "未命中";
+      const sourceTime = source.createdAt
+        ? new Date(source.createdAt).toLocaleString("zh-CN", { hour12: false })
+        : "未保存";
+
+      stats.innerHTML = `
+        <span class="tag green">${source.label}${source.bets.length}注</span>
+        <span class="tag">复盘 ${draw.issue}</span>
+        <span class="tag amber">${prizeText}</span>
+        <span class="tag">头奖理论 ${formatPercent(jackpotProbability, 6)} / ${oddsText(jackpotProbability)}</span>
+        <span class="tag">任意奖理论 ${formatPercent(anyPrizeProbability, 2)}</span>
+        <span class="tag">近100期套测：${backtest.winningPeriods}/${backtest.periods}期有奖，固定奖约${backtest.fixedAmount}元</span>
+      `;
+
+      list.innerHTML = `
+        <article class="draw-row">
+          <div class="draw-row-head">
+            <span>最新开奖 ${draw.issue}</span>
+            <span>${draw.date || ""} · 来源${sourceTime}</span>
+          </div>
+          <div class="draw-balls">${drawBallsHtml(draw)}</div>
+        </article>
+        ${evaluations.slice(0, 10).map((item) => `
+          <article class="draw-row">
+            <div class="draw-row-head">
+              <span>第${pad2(item.index)}注：${item.prize.name}</span>
+              <span>${item.redHits}红${item.blueHit ? "+蓝" : ""} · ${oddsText(item.probability)}</span>
+            </div>
+            <div class="draw-balls">
+              ${item.bet.red.map((num) => `<span class="draw-ball ${draw.red.includes(num) ? "red" : ""}" style="${draw.red.includes(num) ? "" : "background:#98a2b3;"}">${pad2(num)}</span>`).join("")}
+              <span class="draw-ball blue" style="${item.blueHit ? "" : "background:#98a2b3;"}">${pad2(item.bet.blue)}</span>
+            </div>
+          </article>
+        `).join("")}
+      `;
+    }
+
     function renderTickets() {
       const root = $("tickets");
       root.innerHTML = "";
@@ -1487,6 +1727,22 @@
       return Array.isArray(PROFILE.draws) ? PROFILE.draws : [];
     }
 
+    function trendConfig() {
+      const metric = $("trendMetric")?.value || "blue";
+      if (metric === "blue") {
+        return { metric, label: "蓝球", min: BLUE_MIN, max: BLUE_MAX, color: "#246bfe", value: (draw) => draw.blue };
+      }
+      const position = Math.max(0, Math.min(5, Number(metric.replace("red", "")) - 1));
+      return {
+        metric,
+        label: `红球${position + 1}号位`,
+        min: RED_MIN,
+        max: RED_MAX,
+        color: "#dc2f45",
+        value: (draw) => (Array.isArray(draw.red) ? draw.red[position] : 0)
+      };
+    }
+
     function movingAverage(values, windowSize = 8) {
       return values.map((_, index) => {
         const start = Math.max(0, index - windowSize + 1);
@@ -1495,7 +1751,7 @@
       });
     }
 
-    function blueProjection(values, steps = 5) {
+    function seriesProjection(values, min, max, steps = 5) {
       const recent = values.slice(-24);
       if (!recent.length) return [];
       const avg = recent.reduce((acc, value) => acc + value, 0) / recent.length;
@@ -1505,36 +1761,64 @@
       const slope = (lastMa - prevMa) / 8;
       return Array.from({ length: steps }, (_, index) => {
         const raw = lastMa + slope * (index + 1) * 0.65 + (avg - lastMa) * 0.18;
-        return Math.max(1, Math.min(16, raw));
+        return Math.max(min, Math.min(max, raw));
       });
+    }
+
+    function drawBallsHtml(draw) {
+      if (!draw) return "";
+      return `
+        ${draw.red.map((num) => `<span class="draw-ball red">${pad2(num)}</span>`).join("")}
+        <span class="draw-ball blue">${pad2(draw.blue)}</span>
+      `;
+    }
+
+    function renderTrendDetail(draw) {
+      const root = $("blueTrendDetail");
+      if (!root) return;
+      if (!draw) {
+        root.innerHTML = "点击走势图上的圆点查看对应期号。";
+        return;
+      }
+      const config = trendConfig();
+      root.innerHTML = `
+        <span>${draw.issue}</span>
+        <span>${draw.date}</span>
+        <span>${config.label}：${pad2(config.value(draw))}</span>
+        <span class="draw-balls">${drawBallsHtml(draw)}</span>
+      `;
     }
 
     function drawBlueTrendChart() {
       const canvas = $("blueTrendChart");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
+      const config = trendConfig();
       const draws = getDraws().slice(0, 60).reverse();
-      const values = draws.map((draw) => draw.blue);
-      const future = blueProjection(values, 5);
+      const values = draws.map(config.value);
+      const future = seriesProjection(values, config.min, config.max, 5);
       const ma = movingAverage(values, 8);
       const width = canvas.width;
       const height = canvas.height;
       const pad = { left: 42, right: 28, top: 18, bottom: 34 };
       const plotW = width - pad.left - pad.right;
       const plotH = height - pad.top - pad.bottom;
+      trendPoints = [];
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = "#fbfcfd";
       ctx.fillRect(0, 0, width, height);
 
-      const y = (value) => pad.top + (16 - value) / 15 * plotH;
+      const span = Math.max(1, config.max - config.min);
+      const y = (value) => pad.top + (config.max - value) / span * plotH;
       const totalPoints = Math.max(2, values.length + future.length);
       const x = (index) => pad.left + index / (totalPoints - 1) * plotW;
+      const ticks = config.metric === "blue" ? [1, 4, 8, 12, 16] : [1, 8, 16, 24, 33];
 
       ctx.strokeStyle = "#d8dee8";
       ctx.lineWidth = 1;
       ctx.fillStyle = "#667085";
       ctx.font = "12px Microsoft YaHei, Arial";
-      [1, 4, 8, 12, 16].forEach((tick) => {
+      ticks.forEach((tick) => {
         ctx.beginPath();
         ctx.moveTo(pad.left, y(tick));
         ctx.lineTo(width - pad.right, y(tick));
@@ -1543,7 +1827,7 @@
       });
 
       if (values.length) {
-        ctx.strokeStyle = "#246bfe";
+        ctx.strokeStyle = config.color;
         ctx.lineWidth = 3;
         ctx.beginPath();
         values.forEach((value, index) => {
@@ -1578,17 +1862,21 @@
         ctx.setLineDash([]);
 
         values.forEach((value, index) => {
-          if (index % 4 !== 0 && index !== values.length - 1) return;
-          ctx.fillStyle = "#246bfe";
+          const px = x(index);
+          const py = y(value);
+          const draw = draws[index];
+          trendPoints.push({ x: px, y: py, draw, value });
+          ctx.fillStyle = selectedTrendIssue === draw.issue ? "#111827" : config.color;
           ctx.beginPath();
-          ctx.arc(x(index), y(value), 4, 0, Math.PI * 2);
+          ctx.arc(px, py, selectedTrendIssue === draw.issue ? 5.5 : 3.6, 0, Math.PI * 2);
           ctx.fill();
         });
       }
+      window.__trendPoints = trendPoints;
 
       ctx.fillStyle = "#667085";
-      ctx.fillText("蓝球", pad.left, height - 10);
-      ctx.fillStyle = "#246bfe";
+      ctx.fillText(config.label, pad.left, height - 10);
+      ctx.fillStyle = config.color;
       ctx.fillText("实际", width - 170, 18);
       ctx.fillStyle = "#12805c";
       ctx.fillText("均线", width - 120, 18);
@@ -1597,26 +1885,29 @@
     }
 
     function renderBlueTrend() {
+      const config = trendConfig();
       const draws = getDraws();
       const recent = draws.slice(0, 60);
-      const values = recent.map((draw) => draw.blue);
-      const future = blueProjection(values.slice().reverse(), 5).map((value) => Math.round(value));
+      const values = recent.map(config.value);
+      const future = seriesProjection(values.slice().reverse(), config.min, config.max, 5).map((value) => Math.round(value));
       const recentCounts = new Map();
-      values.forEach((blue) => recentCounts.set(blue, (recentCounts.get(blue) || 0) + 1));
+      values.forEach((num) => recentCounts.set(num, (recentCounts.get(num) || 0) + 1));
       const hot = [...recentCounts.entries()]
         .sort((a, b) => b[1] - a[1] || a[0] - b[0])
         .slice(0, 3)
-        .map(([blue, count]) => `${pad2(blue)}(${count})`)
+        .map(([num, count]) => `${pad2(num)}(${count})`)
         .join(" ");
       $("blueTrendStats").innerHTML = recent.length
         ? `
           <span class="tag green">样本${recent.length}期</span>
-          <span class="tag">近期开奖${pad2(values[0])}</span>
-          <span class="tag">近60热蓝 ${hot}</span>
+          <span class="tag">${config.label}最新${pad2(values[0])}</span>
+          <span class="tag">近60高频 ${hot}</span>
           <span class="tag amber">外推 ${future.map(pad2).join(" ")}</span>
         `
         : `<span class="tag amber">等待同步</span>`;
       drawBlueTrendChart();
+      const selected = getDraws().find((draw) => draw.issue === selectedTrendIssue);
+      renderTrendDetail(selected || recent[0]);
     }
 
     function renderDrawHistory() {
@@ -1630,8 +1921,7 @@
               <span>${draw.date}</span>
             </div>
             <div class="draw-balls">
-              ${draw.red.map((num) => `<span class="draw-ball red">${pad2(num)}</span>`).join("")}
-              <span class="draw-ball blue">${pad2(draw.blue)}</span>
+              ${drawBallsHtml(draw)}
             </div>
           </article>
         `).join("")
@@ -1641,6 +1931,7 @@
     function renderDataViews() {
       renderBlueTrend();
       renderDrawHistory();
+      renderPredictionReview();
     }
 
     function generateAll() {
@@ -1653,6 +1944,7 @@
         groups.push(makeGroup(keys, batchTailCounts, avoidContext));
       }
       renderTickets();
+      renderPredictionReview();
       $("smsOutput").value = "";
       showToast("已按历史分布生成 10 组");
     }
@@ -1693,6 +1985,7 @@
     }
 
     function renderPurchases(records = []) {
+      purchaseRecords = Array.isArray(records) ? records : [];
       const recent = records.slice(-5).reverse();
       $("purchaseStats").innerHTML = records.length
         ? `
@@ -1705,6 +1998,7 @@
           <span class="tag">点击保存为已购买</span>
         `;
       $("purchaseHistory").value = recent.map(formatPurchaseRecord).join("\n\n");
+      renderPredictionReview();
     }
 
     async function loadPurchases() {
@@ -1747,10 +2041,45 @@
         renderPurchases(records);
         $("previousSmsInput").value = smsLines.join("\n");
         renderReview();
+        renderPredictionReview();
         showToast("已保存为我买的号码");
       } catch {
         showToast("保存失败：请通过本地服务打开页面");
       }
+    }
+
+    function canvasLocalPoint(canvas, event) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) * canvas.width / rect.width,
+        y: (event.clientY - rect.top) * canvas.height / rect.height
+      };
+    }
+
+    function nearestTrendPoint(point, radius = 16) {
+      let best = null;
+      let bestDistance = radius;
+      trendPoints.forEach((item) => {
+        const distance = Math.hypot(item.x - point.x, item.y - point.y);
+        if (distance <= bestDistance) {
+          best = item;
+          bestDistance = distance;
+        }
+      });
+      return best;
+    }
+
+    function handleTrendClick(event) {
+      const point = nearestTrendPoint(canvasLocalPoint(event.currentTarget, event));
+      if (!point) return;
+      selectedTrendIssue = point.draw.issue;
+      renderTrendDetail(point.draw);
+      drawBlueTrendChart();
+    }
+
+    function handleTrendPointer(event) {
+      const point = nearestTrendPoint(canvasLocalPoint(event.currentTarget, event), 12);
+      event.currentTarget.style.cursor = point ? "pointer" : "default";
     }
 
     function rerollOne(index) {
@@ -1784,7 +2113,16 @@
     $("savePurchaseBtn").addEventListener("click", savePurchase);
     $("reviewBtn").addEventListener("click", renderReview);
     $("lastDrawInput").addEventListener("input", renderReview);
-    $("previousSmsInput").addEventListener("input", renderReview);
+    $("previousSmsInput").addEventListener("input", () => {
+      renderReview();
+      renderPredictionReview();
+    });
+    $("trendMetric").addEventListener("change", () => {
+      selectedTrendIssue = "";
+      renderBlueTrend();
+    });
+    $("blueTrendChart").addEventListener("click", handleTrendClick);
+    $("blueTrendChart").addEventListener("mousemove", handleTrendPointer);
     $("historyLimit").addEventListener("change", renderDrawHistory);
     $("tickets").addEventListener("click", (event) => {
       const button = event.target.closest("[data-reroll]");
