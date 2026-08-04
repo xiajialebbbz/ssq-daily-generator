@@ -497,15 +497,18 @@
     }
 
     aside {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 12px;
-      align-items: start;
+      column-count: 3;
+      column-gap: 12px;
     }
 
     .panel {
       padding: 15px;
       box-shadow: var(--shadow);
+    }
+
+    aside .panel {
+      break-inside: avoid;
+      margin-bottom: 12px;
     }
 
     .panel-title {
@@ -594,6 +597,9 @@
         grid-template-columns: 1fr;
       }
 
+      aside {
+        column-count: 2;
+      }
     }
 
     @media (max-width: 720px) {
@@ -614,6 +620,10 @@
       .settings,
       .grid {
         grid-template-columns: 1fr;
+      }
+
+      aside {
+        column-count: 1;
       }
 
       .actions {
