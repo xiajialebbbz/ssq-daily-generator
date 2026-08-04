@@ -248,7 +248,7 @@
 
     .content {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 390px;
+      grid-template-columns: 1fr;
       gap: 18px;
       align-items: start;
     }
@@ -284,7 +284,7 @@
 
     #blueTrendChart {
       width: 100%;
-      height: 210px;
+      height: 240px;
       display: block;
     }
 
@@ -498,7 +498,9 @@
 
     aside {
       display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 12px;
+      align-items: start;
     }
 
     .panel {
@@ -592,9 +594,6 @@
         grid-template-columns: 1fr;
       }
 
-      aside {
-        order: -1;
-      }
     }
 
     @media (max-width: 720px) {
@@ -673,19 +672,17 @@
         <section class="panel chart-shell">
           <div class="chart-head">
             <div>
-              <h2 class="panel-title">球号走势</h2>
-              <p class="method">最近 <span id="blueTrendWindow">60</span> 期位置折线，虚线为移动均值的娱乐外推；点击折线点查看期号。</p>
+              <h2 class="panel-title">开奖轨迹</h2>
+              <p class="method">最近 <span id="blueTrendWindow">60</span> 期开奖记录，一期一列；点击红点、蓝点或和值点查看完整期号。</p>
               <div class="trend-controls">
                 <label>
-                  切换球号
+                  切换视图
                   <select id="trendMetric" aria-label="走势图球号">
-                    <option value="red1">红球1号位</option>
-                    <option value="red2">红球2号位</option>
-                    <option value="red3">红球3号位</option>
-                    <option value="red4">红球4号位</option>
-                    <option value="red5">红球5号位</option>
-                    <option value="red6">红球6号位</option>
-                    <option value="blue" selected>蓝球</option>
+                    <option value="redTrail" selected>红球分布轨迹</option>
+                    <option value="blueTrail">蓝球轨迹</option>
+                    <option value="sumTrail">和值走势</option>
+                    <option value="redHeat">红球冷热热力</option>
+                    <option value="tailBars">尾号分布</option>
                   </select>
                 </label>
               </div>
@@ -1728,19 +1725,15 @@
     }
 
     function trendConfig() {
-      const metric = $("trendMetric")?.value || "blue";
-      if (metric === "blue") {
-        return { metric, label: "蓝球", min: BLUE_MIN, max: BLUE_MAX, color: "#246bfe", value: (draw) => draw.blue };
-      }
-      const position = Math.max(0, Math.min(5, Number(metric.replace("red", "")) - 1));
-      return {
-        metric,
-        label: `红球${position + 1}号位`,
-        min: RED_MIN,
-        max: RED_MAX,
-        color: "#dc2f45",
-        value: (draw) => (Array.isArray(draw.red) ? draw.red[position] : 0)
+      const metric = $("trendMetric")?.value || "redTrail";
+      const configs = {
+        redTrail: { metric, label: "红球分布轨迹", min: RED_MIN, max: RED_MAX, color: "#dc2f45", mode: "points" },
+        blueTrail: { metric, label: "蓝球轨迹", min: BLUE_MIN, max: BLUE_MAX, color: "#246bfe", mode: "line" },
+        sumTrail: { metric, label: "和值走势", min: 45, max: 150, color: "#12805c", mode: "sum" },
+        redHeat: { metric, label: "红球冷热热力", min: RED_MIN, max: RED_MAX, color: "#dc2f45", mode: "heat" },
+        tailBars: { metric, label: "尾号分布", min: 0, max: 9, color: "#aa6a00", mode: "bars" }
       };
+      return configs[metric] || configs.redTrail;
     }
 
     function movingAverage(values, windowSize = 8) {
@@ -1748,20 +1741,6 @@
         const start = Math.max(0, index - windowSize + 1);
         const slice = values.slice(start, index + 1);
         return slice.reduce((acc, value) => acc + value, 0) / slice.length;
-      });
-    }
-
-    function seriesProjection(values, min, max, steps = 5) {
-      const recent = values.slice(-24);
-      if (!recent.length) return [];
-      const avg = recent.reduce((acc, value) => acc + value, 0) / recent.length;
-      const ma = movingAverage(values, 8);
-      const lastMa = ma[ma.length - 1] || avg;
-      const prevMa = ma[Math.max(0, ma.length - 9)] || lastMa;
-      const slope = (lastMa - prevMa) / 8;
-      return Array.from({ length: steps }, (_, index) => {
-        const raw = lastMa + slope * (index + 1) * 0.65 + (avg - lastMa) * 0.18;
-        return Math.max(min, Math.min(max, raw));
       });
     }
 
@@ -1773,20 +1752,232 @@
       `;
     }
 
+    function countsFrom(values, start, end) {
+      const counts = Array(end - start + 1).fill(0);
+      values.forEach((value) => {
+        if (value >= start && value <= end) counts[value - start] += 1;
+      });
+      return counts;
+    }
+
+    function topCountText(counts, start = 1, limit = 3) {
+      return counts
+        .map((count, index) => ({ num: index + start, count }))
+        .sort((a, b) => b.count - a.count || a.num - b.num)
+        .slice(0, limit)
+        .map((item) => `${pad2(item.num)}(${item.count})`)
+        .join(" ");
+    }
+
+    function bottomCountText(counts, start = 1, limit = 3) {
+      return counts
+        .map((count, index) => ({ num: index + start, count }))
+        .sort((a, b) => a.count - b.count || a.num - b.num)
+        .slice(0, limit)
+        .map((item) => `${pad2(item.num)}(${item.count})`)
+        .join(" ");
+    }
+
+    function tailCountText(counts, limit = 3, cold = false) {
+      return counts
+        .map((count, digit) => ({ digit, count }))
+        .sort((a, b) => cold ? a.count - b.count || a.digit - b.digit : b.count - a.count || a.digit - b.digit)
+        .slice(0, limit)
+        .map((item) => `${item.digit}尾(${item.count})`)
+        .join(" ");
+    }
+
     function renderTrendDetail(draw) {
       const root = $("blueTrendDetail");
       if (!root) return;
-      if (!draw) {
-        root.innerHTML = "点击走势图上的圆点查看对应期号。";
+      const config = trendConfig();
+      if (config.mode === "heat" || config.mode === "bars") {
+        root.innerHTML = `
+          <span>${config.label}</span>
+          <span>聚合最近60期</span>
+          <span>用于看分布密度，不做期号预测</span>
+        `;
         return;
       }
-      const config = trendConfig();
+      if (!draw) {
+        root.innerHTML = "点击图上的圆点查看对应期号。";
+        return;
+      }
+      const extra = config.mode === "sum"
+        ? `和值：${sum(draw.red)}`
+        : config.metric === "blueTrail"
+          ? `蓝球：${pad2(draw.blue)}`
+          : `红球：${draw.red.map(pad2).join(" ")}`;
       root.innerHTML = `
         <span>${draw.issue}</span>
         <span>${draw.date}</span>
-        <span>${config.label}：${pad2(config.value(draw))}</span>
+        <span>${extra}</span>
         <span class="draw-balls">${drawBallsHtml(draw)}</span>
       `;
+    }
+
+    function drawChartFrame(ctx, width, height) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fbfcfd";
+      ctx.fillRect(0, 0, width, height);
+      ctx.font = "12px Microsoft YaHei, Arial";
+      ctx.lineWidth = 1;
+    }
+
+    function drawYAxis(ctx, ticks, y, width, pad) {
+      ctx.strokeStyle = "#d8dee8";
+      ctx.fillStyle = "#667085";
+      ticks.forEach((tick) => {
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y(tick));
+        ctx.lineTo(width - pad.right, y(tick));
+        ctx.stroke();
+        ctx.fillText(String(tick), 12, y(tick) + 4);
+      });
+    }
+
+    function drawPeriodTicks(ctx, draws, x, height, pad) {
+      ctx.strokeStyle = "#edf1f6";
+      ctx.fillStyle = "#667085";
+      draws.forEach((draw, index) => {
+        if (index % 15 !== 0 && index !== draws.length - 1) return;
+        const px = x(index);
+        ctx.beginPath();
+        ctx.moveTo(px, pad.top);
+        ctx.lineTo(px, height - pad.bottom);
+        ctx.stroke();
+        ctx.fillText(String(draw.issue).slice(-3), px - 10, height - 10);
+      });
+    }
+
+    function plotDrawSeries(ctx, draws, config, width, height, pad) {
+      const values = draws.map((draw) => {
+        if (config.mode === "points") return draw.red;
+        if (config.mode === "sum") return [sum(draw.red)];
+        return [draw.blue];
+      });
+      const flatValues = values.flat();
+      const observedMin = Math.min(...flatValues, config.min);
+      const observedMax = Math.max(...flatValues, config.max);
+      const min = config.mode === "sum" ? Math.max(25, observedMin - 8) : config.min;
+      const max = config.mode === "sum" ? Math.min(175, observedMax + 8) : config.max;
+      const span = Math.max(1, max - min);
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const y = (value) => pad.top + (max - value) / span * plotH;
+      const x = (index) => pad.left + index / Math.max(1, draws.length - 1) * plotW;
+      const ticks = config.mode === "sum"
+        ? [Math.round(min), Math.round((min + max) / 2), Math.round(max)]
+        : config.metric === "blueTrail"
+          ? [1, 4, 8, 12, 16]
+          : [1, 8, 16, 24, 33];
+
+      drawYAxis(ctx, ticks, y, width, pad);
+      drawPeriodTicks(ctx, draws, x, height, pad);
+
+      if (config.mode !== "points") {
+        const lineValues = flatValues;
+        const ma = movingAverage(lineValues, 8);
+        ctx.strokeStyle = config.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        lineValues.forEach((value, index) => {
+          if (index === 0) ctx.moveTo(x(index), y(value));
+          else ctx.lineTo(x(index), y(value));
+        });
+        ctx.stroke();
+
+        ctx.strokeStyle = "#12805c";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ma.forEach((value, index) => {
+          if (index === 0) ctx.moveTo(x(index), y(value));
+          else ctx.lineTo(x(index), y(value));
+        });
+        ctx.stroke();
+      }
+
+      draws.forEach((draw, drawIndex) => {
+        const px = x(drawIndex);
+        if (selectedTrendIssue === draw.issue) {
+          ctx.strokeStyle = "#111827";
+          ctx.lineWidth = 1.3;
+          ctx.beginPath();
+          ctx.moveTo(px, pad.top);
+          ctx.lineTo(px, height - pad.bottom);
+          ctx.stroke();
+        }
+        values[drawIndex].forEach((value) => {
+          const py = y(value);
+          trendPoints.push({ x: px, y: py, draw, value });
+          ctx.fillStyle = selectedTrendIssue === draw.issue ? "#111827" : config.color;
+          ctx.globalAlpha = config.mode === "points" ? 0.74 : 0.9;
+          ctx.beginPath();
+          ctx.arc(px, py, selectedTrendIssue === draw.issue ? 5.2 : 3.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        });
+      });
+
+      ctx.fillStyle = "#667085";
+      ctx.fillText(config.label, pad.left, height - 10);
+      ctx.fillStyle = config.color;
+      ctx.fillText("实际", width - 120, 18);
+      if (config.mode !== "points") {
+        ctx.fillStyle = "#12805c";
+        ctx.fillText("8期均线", width - 70, 18);
+      }
+    }
+
+    function drawRedHeat(ctx, draws, width, height, pad) {
+      const reds = draws.flatMap((draw) => draw.red);
+      const counts = countsFrom(reds, 1, 33);
+      const maxCount = Math.max(...counts, 1);
+      const rowH = (height - pad.top - pad.bottom) / 33;
+      const maxBarW = width - pad.left - pad.right - 100;
+      ctx.fillStyle = "#667085";
+      ctx.fillText("号码", 12, 16);
+      counts.forEach((count, index) => {
+        const num = index + 1;
+        const y = pad.top + index * rowH + 1;
+        const ratio = count / maxCount;
+        ctx.fillStyle = "#667085";
+        if (num % 4 === 1 || num === 33) ctx.fillText(pad2(num), 14, y + rowH - 2);
+        ctx.fillStyle = `rgba(220, 47, 69, ${0.12 + ratio * 0.72})`;
+        ctx.fillRect(pad.left, y, Math.max(2, maxBarW * ratio), Math.max(2, rowH - 2));
+        if (count === maxCount || ratio > 0.75) {
+          ctx.fillStyle = "#344054";
+          ctx.fillText(`${pad2(num)} · ${count}`, pad.left + maxBarW + 12, y + rowH - 2);
+        }
+      });
+      ctx.fillStyle = "#667085";
+      ctx.fillText("颜色越深，最近60期出现越多", pad.left, height - 10);
+    }
+
+    function drawTailBars(ctx, draws, width, height, pad) {
+      const tails = Array(10).fill(0);
+      draws.forEach((draw) => draw.red.forEach((num) => tails[num % 10] += 1));
+      const maxCount = Math.max(...tails, 1);
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const barGap = 12;
+      const barW = (plotW - barGap * 9) / 10;
+      ctx.strokeStyle = "#d8dee8";
+      ctx.beginPath();
+      ctx.moveTo(pad.left, height - pad.bottom);
+      ctx.lineTo(width - pad.right, height - pad.bottom);
+      ctx.stroke();
+      tails.forEach((count, digit) => {
+        const x = pad.left + digit * (barW + barGap);
+        const barH = plotH * count / maxCount;
+        ctx.fillStyle = "#aa6a00";
+        ctx.fillRect(x, height - pad.bottom - barH, barW, barH);
+        ctx.fillStyle = "#667085";
+        ctx.fillText(`${digit}尾`, x + 4, height - 10);
+        ctx.fillText(String(count), x + 6, height - pad.bottom - barH - 6);
+      });
+      ctx.fillStyle = "#667085";
+      ctx.fillText("红球尾号出现次数", pad.left, 18);
     }
 
     function drawBlueTrendChart() {
@@ -1795,115 +1986,66 @@
       const ctx = canvas.getContext("2d");
       const config = trendConfig();
       const draws = getDraws().slice(0, 60).reverse();
-      const values = draws.map(config.value);
-      const future = seriesProjection(values, config.min, config.max, 5);
-      const ma = movingAverage(values, 8);
       const width = canvas.width;
       const height = canvas.height;
-      const pad = { left: 42, right: 28, top: 18, bottom: 34 };
-      const plotW = width - pad.left - pad.right;
-      const plotH = height - pad.top - pad.bottom;
+      const pad = { left: 42, right: 28, top: 22, bottom: 34 };
       trendPoints = [];
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "#fbfcfd";
-      ctx.fillRect(0, 0, width, height);
-
-      const span = Math.max(1, config.max - config.min);
-      const y = (value) => pad.top + (config.max - value) / span * plotH;
-      const totalPoints = Math.max(2, values.length + future.length);
-      const x = (index) => pad.left + index / (totalPoints - 1) * plotW;
-      const ticks = config.metric === "blue" ? [1, 4, 8, 12, 16] : [1, 8, 16, 24, 33];
-
-      ctx.strokeStyle = "#d8dee8";
-      ctx.lineWidth = 1;
-      ctx.fillStyle = "#667085";
-      ctx.font = "12px Microsoft YaHei, Arial";
-      ticks.forEach((tick) => {
-        ctx.beginPath();
-        ctx.moveTo(pad.left, y(tick));
-        ctx.lineTo(width - pad.right, y(tick));
-        ctx.stroke();
-        ctx.fillText(String(tick), 12, y(tick) + 4);
-      });
-
-      if (values.length) {
-        ctx.strokeStyle = config.color;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        values.forEach((value, index) => {
-          const px = x(index);
-          const py = y(value);
-          if (index === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        });
-        ctx.stroke();
-
-        ctx.strokeStyle = "#12805c";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ma.forEach((value, index) => {
-          const px = x(index);
-          const py = y(value);
-          if (index === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        });
-        ctx.stroke();
-
-        ctx.strokeStyle = "#aa6a00";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([7, 6]);
-        ctx.beginPath();
-        const startIndex = values.length - 1;
-        ctx.moveTo(x(startIndex), y(ma[ma.length - 1] || values[values.length - 1]));
-        future.forEach((value, index) => {
-          ctx.lineTo(x(startIndex + index + 1), y(value));
-        });
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        values.forEach((value, index) => {
-          const px = x(index);
-          const py = y(value);
-          const draw = draws[index];
-          trendPoints.push({ x: px, y: py, draw, value });
-          ctx.fillStyle = selectedTrendIssue === draw.issue ? "#111827" : config.color;
-          ctx.beginPath();
-          ctx.arc(px, py, selectedTrendIssue === draw.issue ? 5.5 : 3.6, 0, Math.PI * 2);
-          ctx.fill();
-        });
+      drawChartFrame(ctx, width, height);
+      if (!draws.length) {
+        ctx.fillStyle = "#667085";
+        ctx.fillText("等待同步开奖数据", pad.left, 48);
+      } else if (config.mode === "heat") {
+        drawRedHeat(ctx, draws, width, height, pad);
+      } else if (config.mode === "bars") {
+        drawTailBars(ctx, draws, width, height, pad);
+      } else {
+        plotDrawSeries(ctx, draws, config, width, height, pad);
       }
       window.__trendPoints = trendPoints;
-
-      ctx.fillStyle = "#667085";
-      ctx.fillText(config.label, pad.left, height - 10);
-      ctx.fillStyle = config.color;
-      ctx.fillText("实际", width - 170, 18);
-      ctx.fillStyle = "#12805c";
-      ctx.fillText("均线", width - 120, 18);
-      ctx.fillStyle = "#aa6a00";
-      ctx.fillText("娱乐外推", width - 70, 18);
     }
 
     function renderBlueTrend() {
       const config = trendConfig();
       const draws = getDraws();
       const recent = draws.slice(0, 60);
-      const values = recent.map(config.value);
-      const future = seriesProjection(values.slice().reverse(), config.min, config.max, 5).map((value) => Math.round(value));
-      const recentCounts = new Map();
-      values.forEach((num) => recentCounts.set(num, (recentCounts.get(num) || 0) + 1));
-      const hot = [...recentCounts.entries()]
-        .sort((a, b) => b[1] - a[1] || a[0] - b[0])
-        .slice(0, 3)
-        .map(([num, count]) => `${pad2(num)}(${count})`)
-        .join(" ");
-      $("blueTrendStats").innerHTML = recent.length
-        ? `
+      const redCounts = countsFrom(recent.flatMap((draw) => draw.red), 1, 33);
+      const blueCounts = countsFrom(recent.map((draw) => draw.blue), 1, 16);
+      const tailCounts = Array(10).fill(0);
+      recent.forEach((draw) => draw.red.forEach((num) => tailCounts[num % 10] += 1));
+      const sums = recent.map((draw) => sum(draw.red));
+      const meanSum = sums.length ? Math.round(sums.reduce((acc, value) => acc + value, 0) / sums.length) : 0;
+      const statsByMode = {
+        points: `
           <span class="tag green">样本${recent.length}期</span>
-          <span class="tag">${config.label}最新${pad2(values[0])}</span>
-          <span class="tag">近60高频 ${hot}</span>
-          <span class="tag amber">外推 ${future.map(pad2).join(" ")}</span>
+          <span class="tag">最新红球 ${recent[0]?.red.map(pad2).join(" ") || "--"}</span>
+          <span class="tag">近60红热 ${topCountText(redCounts)}</span>
+          <span class="tag amber">近60少见 ${bottomCountText(redCounts)}</span>
+        `,
+        line: `
+          <span class="tag green">样本${recent.length}期</span>
+          <span class="tag">最新蓝球 ${pad2(recent[0]?.blue || 0)}</span>
+          <span class="tag">近60蓝热 ${topCountText(blueCounts)}</span>
+          <span class="tag amber">近60少见 ${bottomCountText(blueCounts)}</span>
+        `,
+        sum: `
+          <span class="tag green">样本${recent.length}期</span>
+          <span class="tag">最新和值 ${sums[0] || "--"}</span>
+          <span class="tag">近60均值 ${meanSum || "--"}</span>
+          <span class="tag amber">历史P10-P90 ${PROFILE.sumStats.q10}-${PROFILE.sumStats.q90}</span>
+        `,
+        heat: `
+          <span class="tag green">样本${recent.length}期</span>
+          <span class="tag">红热 ${topCountText(redCounts, 1, 5)}</span>
+          <span class="tag amber">红冷 ${bottomCountText(redCounts, 1, 5)}</span>
+        `,
+        bars: `
+          <span class="tag green">样本${recent.length}期</span>
+          <span class="tag">尾热 ${tailCountText(tailCounts, 3)}</span>
+          <span class="tag amber">尾冷 ${tailCountText(tailCounts, 3, true)}</span>
         `
+      };
+      $("blueTrendStats").innerHTML = recent.length
+        ? statsByMode[config.mode]
         : `<span class="tag amber">等待同步</span>`;
       drawBlueTrendChart();
       const selected = getDraws().find((draw) => draw.issue === selectedTrendIssue);
