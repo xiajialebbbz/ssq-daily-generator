@@ -161,7 +161,7 @@
 
     .top-stage {
       display: grid;
-      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
       gap: 18px;
       align-items: start;
     }
@@ -621,6 +621,7 @@
       }
 
       .top-stage .toolbar {
+        order: -1;
         position: static;
       }
 
@@ -691,6 +692,7 @@
 
     <main>
       <section class="top-stage">
+        <div class="grid" id="tickets"></div>
         <section class="toolbar" aria-label="生成工具栏">
           <div class="settings">
             <label>
@@ -713,7 +715,6 @@
             </button>
           </div>
         </section>
-        <div class="grid" id="tickets"></div>
       </section>
 
       <section class="content">
