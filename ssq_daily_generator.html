@@ -681,6 +681,46 @@
       <section class="content">
         <div class="grid" id="tickets"></div>
 
+        <section class="data-lab">
+          <section class="panel chart-shell">
+            <div class="chart-head">
+              <div>
+                <h2 class="panel-title">开奖轨迹</h2>
+                <p class="method">最近 <span id="blueTrendWindow">60</span> 期开奖记录，一期一列；点击红点、蓝点或和值点查看完整期号。</p>
+                <div class="trend-controls">
+                  <label>
+                    切换视图
+                    <select id="trendMetric" aria-label="走势图球号">
+                      <option value="redTrail" selected>红球分布轨迹</option>
+                      <option value="blueTrail">蓝球轨迹</option>
+                      <option value="sumTrail">和值走势</option>
+                      <option value="redHeat">红球冷热热力</option>
+                      <option value="tailBars">尾号分布</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div class="stat-list" id="blueTrendStats"></div>
+            </div>
+            <div class="chart-box">
+              <canvas id="blueTrendChart" width="900" height="300"></canvas>
+            </div>
+            <div class="trend-detail" id="blueTrendDetail">点击走势图上的圆点查看对应期号。</div>
+          </section>
+
+          <section class="panel">
+            <div class="history-tools">
+              <h2 class="panel-title" style="margin: 0;">历史期数开奖号码</h2>
+              <select id="historyLimit" aria-label="历史期数">
+                <option value="20">最近20期</option>
+                <option value="50">最近50期</option>
+                <option value="100">最近100期</option>
+              </select>
+            </div>
+            <div class="history-list" id="drawHistory"></div>
+          </section>
+        </section>
+
         <aside>
           <section class="panel">
             <h2 class="panel-title">短信格式</h2>
@@ -746,46 +786,6 @@
             </details>
           </section>
         </aside>
-      </section>
-
-      <section class="data-lab">
-        <section class="panel chart-shell">
-          <div class="chart-head">
-            <div>
-              <h2 class="panel-title">开奖轨迹</h2>
-              <p class="method">最近 <span id="blueTrendWindow">60</span> 期开奖记录，一期一列；点击红点、蓝点或和值点查看完整期号。</p>
-              <div class="trend-controls">
-                <label>
-                  切换视图
-                  <select id="trendMetric" aria-label="走势图球号">
-                    <option value="redTrail" selected>红球分布轨迹</option>
-                    <option value="blueTrail">蓝球轨迹</option>
-                    <option value="sumTrail">和值走势</option>
-                    <option value="redHeat">红球冷热热力</option>
-                    <option value="tailBars">尾号分布</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-            <div class="stat-list" id="blueTrendStats"></div>
-          </div>
-          <div class="chart-box">
-            <canvas id="blueTrendChart" width="900" height="300"></canvas>
-          </div>
-          <div class="trend-detail" id="blueTrendDetail">点击走势图上的圆点查看对应期号。</div>
-        </section>
-
-        <section class="panel">
-          <div class="history-tools">
-            <h2 class="panel-title" style="margin: 0;">历史期数开奖号码</h2>
-            <select id="historyLimit" aria-label="历史期数">
-              <option value="20">最近20期</option>
-              <option value="50">最近50期</option>
-              <option value="100">最近100期</option>
-            </select>
-          </div>
-          <div class="history-list" id="drawHistory"></div>
-        </section>
       </section>
     </main>
   </div>
