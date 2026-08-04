@@ -159,6 +159,33 @@
       border-top: 4px solid var(--red);
     }
 
+    .top-stage {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .top-stage .toolbar {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      position: sticky;
+      top: 14px;
+      z-index: 2;
+    }
+
+    .top-stage .settings {
+      grid-template-columns: 1fr;
+    }
+
+    .top-stage .actions {
+      justify-content: stretch;
+    }
+
+    .top-stage .btn {
+      flex: 1 1 100%;
+    }
+
     .settings {
       display: grid;
       grid-template-columns: repeat(2, minmax(180px, 1fr));
@@ -589,6 +616,14 @@
     }
 
     @media (max-width: 960px) {
+      .top-stage {
+        grid-template-columns: 1fr;
+      }
+
+      .top-stage .toolbar {
+        position: static;
+      }
+
       .content {
         grid-template-columns: 1fr;
       }
@@ -655,32 +690,33 @@
     </header>
 
     <main>
-      <section class="toolbar" aria-label="生成工具栏">
-        <div class="settings">
-          <label>
-            短信前缀
-            <input id="smsPrefix" value="00CP#01#" autocomplete="off">
-          </label>
-          <label>
-            短信后缀模板
-            <input id="smsSuffix" value="#1##zmU3" autocomplete="off">
-          </label>
-        </div>
-        <div class="actions">
-          <button class="btn" id="generateBtn" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v7h-7"/></svg>
-            生成10组
-          </button>
-          <button class="btn blue" id="smsBtn" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-            生成短信格式
-          </button>
-        </div>
+      <section class="top-stage">
+        <section class="toolbar" aria-label="生成工具栏">
+          <div class="settings">
+            <label>
+              短信前缀
+              <input id="smsPrefix" value="00CP#01#" autocomplete="off">
+            </label>
+            <label>
+              短信后缀模板
+              <input id="smsSuffix" value="#1##zmU3" autocomplete="off">
+            </label>
+          </div>
+          <div class="actions">
+            <button class="btn" id="generateBtn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v7h-7"/></svg>
+              生成10组
+            </button>
+            <button class="btn blue" id="smsBtn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+              生成短信格式
+            </button>
+          </div>
+        </section>
+        <div class="grid" id="tickets"></div>
       </section>
 
       <section class="content">
-        <div class="grid" id="tickets"></div>
-
         <section class="data-lab">
           <section class="panel chart-shell">
             <div class="chart-head">
