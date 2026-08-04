@@ -270,6 +270,7 @@ function computeProfile(records) {
     dateStart: records[records.length - 1]?.date || "",
     dateEnd: records[0]?.date || "",
     latestDraw: records[0] || null,
+    draws: records,
     redFreq: redFreq.slice(1),
     blueFreq: blueFreq.slice(1),
     tailFreq,
